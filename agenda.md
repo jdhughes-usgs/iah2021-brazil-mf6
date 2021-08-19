@@ -6,9 +6,7 @@ MODFLOW Class
 
 1. Overview/History of MODFLOW prezi (Joe - 20 min.)\
     1. History
-    2. Framework
-    3. Flow
-    4. Transport
+    2. Overview
 
 
 2. Python overview basics - data types/process flow (Mike - 1 hour)
@@ -16,7 +14,7 @@ MODFLOW Class
 
     **BREAK (15 min.)**
 
-3. Overview of MODFLOW6 and FloPy - (Joe - 45 min.) 
+3. Overview of MODFLOW6 and FloPy - (Joe - 45 min.)
     1. Framework
     2. Flow
     3. flopy + flopy resources
@@ -30,7 +28,7 @@ MODFLOW Class
 5. Grid concepts (Mike - 1.25 hours)
     1. Presentation
     2. Unstructured LGR vs LGR
-    3. Theis examples 
+    3. Theis examples
 
 6. Overview of transport capabilities (Joe - 1 hour)
     1. Presentation
@@ -41,7 +39,7 @@ MODFLOW Class
 
 7. Streamflow depletion (Mike - 1 hour)
     1. Notebook example
-    2. Show MODFLOW API example on GitHub 
+    2. Show MODFLOW API example on GitHub
 
 8. Wrap-up and future plans (Joe - 20 min)
     1. Presentation - slide or two about current plans
