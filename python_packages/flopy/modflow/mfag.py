@@ -14,7 +14,6 @@ from ..utils.flopy_io import multi_line_strip
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
-from collections import OrderedDict
 
 
 class ModflowAg(Package):
@@ -58,7 +57,7 @@ class ModflowAg(Package):
 
     """
 
-    _options = OrderedDict(
+    _options = dict(
         [
             ("noprint", OptionBlock.simple_flag),
             (
@@ -67,7 +66,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("numirrdiversions", OptionBlock.simple_int),
                             ("maxcellsdiversion", OptionBlock.simple_int),
@@ -81,7 +80,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("numirrwells", OptionBlock.simple_int),
                             ("maxcellswell", OptionBlock.simple_int),
@@ -95,7 +94,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 2,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [
                             ("numsupwells", OptionBlock.simple_int),
                             ("maxdiversions", OptionBlock.simple_int),
@@ -109,7 +108,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("nummaxwell", OptionBlock.simple_int)]
                     ),
                 },
@@ -128,7 +127,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_diversionlist", OptionBlock.simple_int)]
                     ),
                 },
@@ -139,7 +138,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_welllist", OptionBlock.simple_int)]
                     ),
                 },
@@ -150,7 +149,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_wellirrlist", OptionBlock.simple_int)]
                     ),
                 },
@@ -161,7 +160,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unit_diversionirrlist", OptionBlock.simple_int)]
                     ),
                 },
@@ -172,7 +171,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: OrderedDict(
+                    OptionBlock.vars: dict(
                         [("unitcbc", OptionBlock.simple_int)]
                     ),
                 },
@@ -197,7 +196,7 @@ class ModflowAg(Package):
 
         if "nwt" not in model.version:
             raise AssertionError(
-                "Model version must be mfnwt " "to use the AG package"
+                "Model version must be mfnwt to use the AG package"
             )
 
         # setup the package parent class
@@ -226,9 +225,7 @@ class ModflowAg(Package):
         )
 
         # set up class
-        self.heading = "# {} package for {}, generated " "by flopy\n".format(
-            self.name[0], model.version_types[model.version]
-        )
+        self._generate_heading()
         self.url = "ag.htm"
 
         # options
@@ -336,7 +333,7 @@ class ModflowAg(Package):
         ws = self.parent.model_ws
         name = self.file_name[0]
         with open(os.path.join(ws, name), "w") as foo:
-            foo.write(self.heading)
+            foo.write(f"{self.heading}\n")
 
             # update options
             self.options.update_from_package(self)

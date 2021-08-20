@@ -2,7 +2,6 @@ import sys, inspect
 import numpy as np
 from ..data.mfstructure import DatumType
 from ..data import mfdata
-from collections import OrderedDict
 from ..mfbase import ExtFileAction, MFDataException
 from ...datbase import DataType
 from .mfdatautil import convert_data, to_string
@@ -185,7 +184,7 @@ class MFScalar(mfdata.MFData):
             )
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not convert data "{}" to type ' '"{}".'.format(
+            comment = 'Could not convert data "{}" to type "{}".'.format(
                 data, self._data_type
             )
             raise MFDataException(
@@ -206,7 +205,7 @@ class MFScalar(mfdata.MFData):
             storage.set_data(converted_data, key=self._current_key)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not set data "{}" to type ' '"{}".'.format(
+            comment = 'Could not set data "{}" to type "{}".'.format(
                 data, self._data_type
             )
             raise MFDataException(
@@ -820,7 +819,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             if `data` is a dictionary.
 
         """
-        if isinstance(data, dict) or isinstance(data, OrderedDict):
+        if isinstance(data, dict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
             for key, list_item in data.items():
@@ -902,7 +901,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         )
 
     def _new_storage(self, stress_period=0):
-        return OrderedDict()
+        return {}
 
     def _get_storage_obj(self):
         if (

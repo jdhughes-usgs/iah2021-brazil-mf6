@@ -4,34 +4,6 @@ import os.path
 import numpy as np
 from .grid import Grid, CachedData
 
-try:
-    from numpy.lib import NumpyVersion
-
-    numpy115 = NumpyVersion(np.__version__) >= "1.15.0"
-except ImportError:
-    numpy115 = False
-
-if not numpy115:
-
-    def flip_numpy115(m, axis=None):
-        """Provide same behavior for np.flip since numpy 1.15.0."""
-        import numpy.core.numeric as _nx
-        from numpy.core.numeric import asarray
-
-        if not hasattr(m, "ndim"):
-            m = asarray(m)
-        if axis is None:
-            indexer = (np.s_[::-1],) * m.ndim
-        else:
-            axis = _nx.normalize_axis_tuple(axis, m.ndim)
-            indexer = [np.s_[:]] * m.ndim
-            for ax in axis:
-                indexer[ax] = np.s_[::-1]
-            indexer = tuple(indexer)
-        return m[indexer]
-
-    np.flip = flip_numpy115
-
 
 def array_at_verts_basic2d(a):
     """
@@ -189,15 +161,15 @@ class StructuredGrid(Grid):
                 self.__nlay = nlay
             else:
                 if laycbd is not None:
-                    self.__nlay = len(botm) - np.sum(laycbd > 0)
+                    self.__nlay = len(botm) - np.count_nonzero(laycbd)
                 else:
                     self.__nlay = len(botm)
         else:
             self.__nlay = nlay
         if laycbd is not None:
-            self.__laycbd = laycbd
+            self._laycbd = laycbd
         else:
-            self.__laycbd = np.zeros(self.__nlay or (), dtype=int)
+            self._laycbd = np.zeros(self.__nlay or (), dtype=int)
 
     ####################
     # Properties
@@ -464,7 +436,7 @@ class StructuredGrid(Grid):
                 z = np.empty((self.__nlay, self.__nrow, self.__ncol))
                 z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.0
                 ibs = np.arange(self.__nlay)
-                quasi3d = [cbd != 0 for cbd in self.__laycbd]
+                quasi3d = [cbd != 0 for cbd in self._laycbd]
                 if np.any(quasi3d):
                     ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[: self.__nlay - 1]
                 for l, ib in enumerate(ibs[1:], 1):

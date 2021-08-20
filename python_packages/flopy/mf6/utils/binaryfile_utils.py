@@ -13,7 +13,7 @@ class MFOutput:
     ----------
     path: binary file path location
     mfdict: SimulationDict() object
-    key: OrderedDictionary key ex. ('flow15','CBC','FLOW RIGHT FACE')
+    key: dict key ex. ('flow15','CBC','FLOW RIGHT FACE')
 
     Returns
     -------
@@ -55,7 +55,7 @@ class MFOutputRequester:
 
     Parameters:
     ----------
-    mfdict: OrderedDict
+    mfdict: dict
         local instance of the SimulationDict() object
     path:
         pointer to the MFSimulationPath object
@@ -179,7 +179,7 @@ class MFOutputRequester:
                 return bf.CellBudgetFile(path, precision="double")
             except AssertionError:
                 raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
+                    "{} does not exist".format(self.dataDict[key])
                 )
 
         elif bintype == "HDS":
@@ -187,7 +187,7 @@ class MFOutputRequester:
                 return bf.HeadFile(path, precision="double")
             except AssertionError:
                 raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
+                    "{} does not exist".format(self.dataDict[key])
                 )
 
         elif bintype == "DDN":
@@ -195,7 +195,7 @@ class MFOutputRequester:
                 return bf.HeadFile(path, text="drawdown", precision="double")
             except AssertionError:
                 raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
+                    "{} does not exist".format(self.dataDict[key])
                 )
 
         elif bintype == "UCN":
@@ -203,7 +203,7 @@ class MFOutputRequester:
                 return bf.UcnFile(path, precision="single")
             except AssertionError:
                 raise AssertionError(
-                    "{} does not " "exist".format(self.dataDict[key])
+                    "{} does not exist".format(self.dataDict[key])
                 )
 
         else:

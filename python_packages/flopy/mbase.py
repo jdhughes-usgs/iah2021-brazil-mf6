@@ -4,8 +4,6 @@ mbase module
   all of the other models inherit from.
 
 """
-
-from __future__ import print_function
 import abc
 import sys
 import os
@@ -21,7 +19,6 @@ import copy
 import numpy as np
 from flopy import utils, discretization
 from .version import __version__
-from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
 ## Global variables
@@ -362,7 +359,10 @@ class BaseModel(ModelInterface):
 
         # build model discretization objects
         self._modelgrid = Grid(
-            proj4=self._proj4_str, xoff=xll, yoff=yll, angrot=self._rotation
+            proj4=self._proj4_str,
+            xoff=xll,
+            yoff=yll,
+            angrot=self._rotation,
         )
         self._modeltime = None
 
@@ -391,13 +391,13 @@ class BaseModel(ModelInterface):
     @property
     def modeltime(self):
         raise NotImplementedError(
-            "must define modeltime in child " "class to use this base class"
+            "must define modeltime in child class to use this base class"
         )
 
     @property
     def modelgrid(self):
         raise NotImplementedError(
-            "must define modelgrid in child " "class to use this base class"
+            "must define modelgrid in child class to use this base class"
         )
 
     @property
@@ -572,12 +572,10 @@ class BaseModel(ModelInterface):
                     except:
                         pn = p.name
                     if self.verbose:
-                        msg = (
-                            "\nWARNING:\n    unit {} ".format(u)
-                            + "of package {} ".format(pn)
-                            + "already in use."
+                        print(
+                            "\nWARNING:\n    unit {} of package {} "
+                            "already in use.".format(u, pn)
                         )
-                        print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
@@ -586,8 +584,7 @@ class BaseModel(ModelInterface):
                 if self.verbose:
                     print(
                         "\nWARNING:\n    Two packages of the same type, "
-                        + "Replacing existing "
-                        + "'{}' package.".format(p.name[0])
+                        "Replacing existing '{}' package.".format(p.name[0])
                     )
                 self.packagelist[i] = p
                 return
@@ -649,16 +646,12 @@ class BaseModel(ModelInterface):
         if item == "output_packages" or not hasattr(self, "output_packages"):
             raise AttributeError(item)
 
-        if item == "sr":
-            if self.dis is not None:
-                return self.dis.sr
-            else:
-                return None
         if item == "tr":
             if self.dis is not None:
                 return self.dis.tr
             else:
                 return None
+
         if item == "start_datetime":
             if self.dis is not None:
                 return self.dis.start_datetime
@@ -702,10 +695,8 @@ class BaseModel(ModelInterface):
         else:
             txt1 = "Removing"
             txt2 = "from"
-        msg = (
-            "{} {} ".format(txt1, self.output_fnames[i])
-            + "(unit={}) ".format(self.output_units[i])
-            + "{} the output list.".format(txt2)
+        msg = "{} {} (unit={}) {} the output list.".format(
+            txt1, self.output_fnames[i], self.output_units[i], txt2
         )
         print(msg)
 
@@ -797,7 +788,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 msg = (
                     "BaseModel.add_output() warning: "
-                    + "replacing existing filename {}".format(fname)
+                    "replacing existing filename {}".format(fname)
                 )
                 print(msg)
             idx = self.output_fnames.index(fname)
@@ -914,7 +905,7 @@ class BaseModel(ModelInterface):
         else:
             msg = (
                 " either fname or unit must be passed "
-                + " to set_output_attribute()"
+                "to set_output_attribute()"
             )
             raise Exception(msg)
         if attr is not None:
@@ -956,7 +947,7 @@ class BaseModel(ModelInterface):
         else:
             raise Exception(
                 " either fname or unit must be passed "
-                + " to set_output_attribute()"
+                "to set_output_attribute()"
             )
         v = None
         if attr is not None:
@@ -989,7 +980,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 msg = (
                     "BaseModel.add_external() warning: "
-                    + "replacing existing filename {}".format(fname)
+                    "replacing existing filename {}".format(fname)
                 )
                 print(msg)
             idx = self.external_fnames.index(fname)
@@ -1001,7 +992,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 msg = (
                     "BaseModel.add_external() warning: "
-                    + "replacing existing unit {}".format(unit)
+                    "replacing existing unit {}".format(unit)
                 )
                 print(msg)
             idx = self.external_units.index(unit)
@@ -1113,10 +1104,10 @@ class BaseModel(ModelInterface):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = (
-                    "{:14s} ".format(p.name[i])
-                    + "{:5d}  ".format(p.unit_number[i])
-                    + "{}".format(p.file_name[i])
+                s = "{:14s} {:5d}  {}".format(
+                    p.name[i],
+                    p.unit_number[i],
+                    p.file_name[i],
                 )
                 if p.extra[i]:
                     s += " " + p.extra[i]
@@ -1176,8 +1167,7 @@ class BaseModel(ModelInterface):
         # check that this is a valid model version
         if self.version not in list(self.version_types.keys()):
             err = (
-                "Error: Unsupported model "
-                + "version ({}).".format(self.version)
+                "Error: Unsupported model version ({}).".format(self.version)
                 + " Valid model versions are:"
             )
             for v in list(self.version_types.keys()):
@@ -1185,23 +1175,16 @@ class BaseModel(ModelInterface):
             raise Exception(err)
 
         # set namefile heading
-        heading = (
-            "# Name file for "
-            + "{}, ".format(self.version_types[self.version])
-            + "generated by Flopy version {}.".format(__version__)
+        heading = "# Name file for {}, generated by Flopy version {}.".format(
+            self.version_types[self.version], __version__
         )
         self.heading = heading
 
         # set heading for each package
         for p in self.get_package_list():
             pak = self.get_package(p)
-            heading = (
-                "# {} package for ".format(pak.name[0])
-                + "{}, ".format(self.version_types[self.version])
-                + "generated by Flopy version {}.".format(__version__)
-            )
-
-            pak.heading = heading
+            if hasattr(pak, "heading"):
+                pak._generate_heading()
 
         return None
 
@@ -1227,14 +1210,10 @@ class BaseModel(ModelInterface):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                line = "\ncreating model workspace...\n" + "   {}".format(
-                    new_pth
-                )
-                print(line)
+                print("\ncreating model workspace...\n   {}".format(new_pth))
                 os.makedirs(new_pth)
             except:
-                line = "\n{} not valid, workspace-folder ".format(new_pth)
-                raise OSError(line)
+                raise OSError("{} not valid, workspace-folder".format(new_pth))
                 # line = '\n{} not valid, workspace-folder '.format(new_pth) + \
                 #        'was changed to {}\n'.format(os.getcwd())
                 # print(line)
@@ -1329,7 +1308,7 @@ class BaseModel(ModelInterface):
                 self.dis.sr = value
             else:
                 raise Exception(
-                    "cannot set SpatialReference -" "ModflowDis not found"
+                    "cannot set SpatialReference - ModflowDis not found"
                 )
         elif key == "tr":
             assert isinstance(
@@ -1339,7 +1318,7 @@ class BaseModel(ModelInterface):
                 self.dis.tr = value
             else:
                 raise Exception(
-                    "cannot set TemporalReference -" "ModflowDis not found"
+                    "cannot set TemporalReference - ModflowDis not found"
                 )
         elif key == "start_datetime":
             if self.dis is not None:
@@ -1347,7 +1326,7 @@ class BaseModel(ModelInterface):
                 self.tr.start_datetime = value
             else:
                 raise Exception(
-                    "cannot set start_datetime -" "ModflowDis not found"
+                    "cannot set start_datetime - ModflowDis not found"
                 )
         else:
             super().__setattr__(key, value)
@@ -1420,7 +1399,7 @@ class BaseModel(ModelInterface):
             if self.verbose:
                 print(
                     "\nResetting free_format_input to True to "
-                    + "preserve the precision of the parameter data."
+                    "preserve the precision of the parameter data."
                 )
             self.free_format_input = True
 
@@ -1719,24 +1698,24 @@ def run_model(
             if not exe_name.lower().endswith(".exe"):
                 exe = which(exe_name + ".exe")
     if exe is None:
-        s = "The program {} does not exist or is not executable.".format(
-            exe_name
+        raise Exception(
+            "The program {} does not exist or is not executable.".format(
+                exe_name
+            )
         )
-        raise Exception(s)
     else:
         if not silent:
-            s = (
+            print(
                 "FloPy is using the following "
-                + " executable to run the model: {}".format(exe)
+                "executable to run the model: {}".format(exe)
             )
-            print(s)
 
     if namefile is not None:
         if not os.path.isfile(os.path.join(model_ws, namefile)):
-            s = "The namefile for this model " + "does not exists: {}".format(
-                namefile
+            raise Exception(
+                "The namefile for this model does not exists: "
+                "{}".format(namefile)
             )
-            raise Exception(s)
 
     # simple little function for the thread to target
     def q_output(output, q):

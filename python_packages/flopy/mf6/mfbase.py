@@ -2,7 +2,6 @@ import glob
 import importlib
 import inspect, sys, traceback
 import os, copy
-from collections import OrderedDict
 from collections.abc import Iterable
 from shutil import copyfile
 from enum import Enum
@@ -139,7 +138,7 @@ class MFDataException(Exception):
         # build error string
         error_message_0 = "An error occurred in "
         if self.data_element is not None and self.data_element != "":
-            error_message_1 = 'data element "{}"' " ".format(self.data_element)
+            error_message_1 = 'data element "{}" '.format(self.data_element)
         else:
             error_message_1 = ""
         if self.model is not None and self.model != "":
@@ -167,10 +166,6 @@ class MFDataException(Exception):
             error_message_4,
             error_message_5,
         )
-        # if self.debug:
-        #    tb_string = ''.join(self.org_tb_string)
-        #    error_message = '{}\nCall Stack\n{}'.format(error_message,
-        #                                                tb_string)
         Exception.__init__(self, error_message)
 
 
@@ -225,23 +220,24 @@ class MFFileMgmt:
     Attributes
     ----------
 
-    model_relative_path : OrderedDict
+    model_relative_path : dict
         Dictionary of relative paths to each model folder
 
     """
 
-    def __init__(self, path):
+    def __init__(self, path, mfsim=None):
+        self.simulation = mfsim
         self._sim_path = ""
-        self.set_sim_path(path)
+        self.set_sim_path(path, True)
 
         # keys:fully pathed filenames, vals:FilePath instances
         self.existing_file_dict = {}
         # keys:filenames,vals:instance name
 
-        self.model_relative_path = OrderedDict()
+        self.model_relative_path = {}
 
         self._last_loaded_sim_path = None
-        self._last_loaded_model_relative_path = OrderedDict()
+        self._last_loaded_model_relative_path = {}
 
     def copy_files(self, copy_relative_only=True):
         """Copy files external to updated path.
@@ -292,32 +288,8 @@ class MFFileMgmt:
     def get_updated_path(
         self, external_file_path, model_name, ext_file_action
     ):
-        """Get updated external file path information.  For internal
-        FloPy use, not intended for end user."""
-        external_file_path = self.string_to_file_path(external_file_path)
-        if ext_file_action == ExtFileAction.copy_all:
-            if os.path.isabs(external_file_path):
-                # move file path to local model or simulation path
-                file_name = os.path.split(external_file_path)[1]
-                if model_name:
-                    return os.path.join(
-                        self.get_model_path(model_name), file_name
-                    )
-                else:
-                    return os.path.join(self.get_sim_path(), file_name)
-            else:
-                return external_file_path
-        elif ext_file_action == ExtFileAction.copy_relative_paths:
-            return external_file_path
-        elif ext_file_action == ExtFileAction.copy_none:
-            if os.path.isabs(external_file_path):
-                return external_file_path
-            else:
-                return os.path.join(
-                    self._build_relative_path(model_name), external_file_path
-                )
-        else:
-            return None
+        """For internal FloPy use, not intended for end user."""
+        return external_file_path
 
     def _build_relative_path(self, model_name):
         old_abs_path = self.resolve_path("", model_name, True)
@@ -434,9 +406,10 @@ class MFFileMgmt:
             new_file_path = MFFilePath(file_path, model_name)
             self.existing_file_dict[file_path] = new_file_path
 
-    def set_sim_path(self, path):
+    def set_sim_path(self, path, internal_use=False):
         """
-        Set the file path to the simulation files
+        Set the file path to the simulation files.  Internal use only,
+        call MFSimulation's set_sim_path method instead.
 
         Parameters
         ----------
@@ -451,7 +424,14 @@ class MFFileMgmt:
         --------
         self.simulation_data.mfdata.set_sim_path('sim_folder')
         """
-
+        if not internal_use:
+            print(
+                "WARNING: MFFileMgt's set_sim_path has been deprecated.  "
+                "Please use MFSimulation's set_sim_path in the future."
+            )
+            if self.simulation is not None:
+                self.simulation.set_sim_path(path)
+                return
         # recalculate paths for everything
         # resolve path type
         path = self.string_to_file_path(path)
@@ -474,23 +454,12 @@ class MFFileMgmt:
         if os.path.isabs(file_path):
             # path is an absolute path
             if move_abs_paths:
-                if model_name is None:
-                    return self.get_sim_path(last_loaded_path)
-                else:
-                    return self.get_model_path(model_name, last_loaded_path)
+                return self.get_sim_path(last_loaded_path)
             else:
                 return file_path
         else:
             # path is a relative path
-            if model_name is None:
-                return os.path.join(
-                    self.get_sim_path(last_loaded_path), file_path
-                )
-            else:
-                return os.path.join(
-                    self.get_model_path(model_name, last_loaded_path),
-                    file_path,
-                )
+            return os.path.join(self.get_sim_path(last_loaded_path), file_path)
 
 
 class PackageContainer:

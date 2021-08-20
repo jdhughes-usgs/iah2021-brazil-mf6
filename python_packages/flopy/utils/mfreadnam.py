@@ -8,12 +8,6 @@ MODFLOW Guide
 
 """
 import os
-import sys
-
-if sys.version_info < (3, 6):
-    from collections import OrderedDict
-
-    dict = OrderedDict
 
 
 class NamData:
@@ -113,12 +107,10 @@ def parsenamefile(namfilename, packages, verbose=True):
 
     Returns
     -------
-    dict or OrderedDict
+    dict
         For each file listed in the name file, a
         :class:`flopy.utils.mfreadnam.NamData` instance
-        is stored in the returned dict keyed by unit number. Prior to Python
-        version 3.6 the return object is an OrderedDict to retain the order
-        of items in the nam file.
+        is stored in the returned dict keyed by unit number.
 
     Raises
     ------
@@ -127,8 +119,8 @@ def parsenamefile(namfilename, packages, verbose=True):
     ValueError:
         For lines that cannot be parsed.
     """
-    # initiate the ext_unit_dict ordered dictionary
-    ext_unit_dict = dict()
+    # initiate the ext_unit_dict dictionary
+    ext_unit_dict = {}
 
     if verbose:
         print("Parsing the namefile --> {0:s}".format(namfilename))
@@ -240,33 +232,31 @@ def attribs_from_namfile_header(namefile):
                 xll = float(item.split(":")[1])
                 defaults["xll"] = xll
             except:
-                print("   could not parse xll " + "in {}".format(namefile))
+                print("   could not parse xll in {}".format(namefile))
         elif "yll" in item.lower():
             try:
                 yll = float(item.split(":")[1])
                 defaults["yll"] = yll
             except:
-                print("   could not parse yll " + "in {}".format(namefile))
+                print("   could not parse yll in {}".format(namefile))
         elif "xul" in item.lower():
             try:
                 xul = float(item.split(":")[1])
                 defaults["xul"] = xul
             except:
-                print("   could not parse xul " + "in {}".format(namefile))
+                print("   could not parse xul in {}".format(namefile))
         elif "yul" in item.lower():
             try:
                 yul = float(item.split(":")[1])
                 defaults["yul"] = yul
             except:
-                print("   could not parse yul " + "in {}".format(namefile))
+                print("   could not parse yul in {}".format(namefile))
         elif "rotation" in item.lower():
             try:
                 angrot = float(item.split(":")[1])
                 defaults["rotation"] = angrot
             except:
-                print(
-                    "   could not parse rotation " + "in {}".format(namefile)
-                )
+                print("   could not parse rotation in {}".format(namefile))
         elif "proj4_str" in item.lower():
             try:
                 proj4 = ":".join(item.split(":")[1:]).strip()
@@ -274,13 +264,11 @@ def attribs_from_namfile_header(namefile):
                     proj4 = None
                 defaults["proj4_str"] = proj4
             except:
-                print(
-                    "   could not parse proj4_str " + "in {}".format(namefile)
-                )
+                print("   could not parse proj4_str in {}".format(namefile))
         elif "start" in item.lower():
             try:
                 start_datetime = item.split(":")[1].strip()
                 defaults["start_datetime"] = start_datetime
             except:
-                print("   could not parse start " + "in {}".format(namefile))
+                print("   could not parse start in {}".format(namefile))
     return defaults

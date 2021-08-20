@@ -208,7 +208,7 @@ class UnstructuredGrid(Grid):
         if self._vertices is None:
             return self._vertices
         else:
-            return np.array([t[1:] for t in self._vertices], dtype=float)
+            return np.array([list(t)[1:] for t in self._vertices], dtype=float)
 
     @property
     def ia(self):
@@ -327,6 +327,21 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
+    @property
+    def cross_section_vertices(self):
+        """
+        Method to get vertices for cross-sectional plotting
+
+        Returns
+        -------
+            xvertices, yvertices
+        """
+        xv, yv = self.xyzvertices[0], self.xyzvertices[1]
+        if len(xv) == self.ncpl[0]:
+            xv *= self.nlay
+            yv *= self.nlay
+        return xv, yv
+
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
         Get PlotCrossSection compatible layers, ncpl, and ncb
@@ -421,7 +436,32 @@ class UnstructuredGrid(Grid):
             plotarray, xcenter array, ycenter array, and a boolean flag
             for contouring
         """
-        return plotarray, xcenters, None, False
+        if self.ncpl[0] != self.nnodes:
+            return plotarray, xcenters, None, False
+        else:
+            zcenters = []
+            if isinstance(head, np.ndarray):
+                head = head.reshape(1, self.nnodes)
+                head = np.vstack((head, head))
+            else:
+                head = elev.reshape(2, self.nnodes)
+
+            elev = elev.reshape(2, self.nnodes)
+            for k, ev in enumerate(elev):
+                if k == 0:
+                    zc = [
+                        ev[i] if head[k][i] > ev[i] else head[k][i]
+                        for i in sorted(projpts)
+                    ]
+                else:
+                    zc = [ev[i] for i in sorted(projpts)]
+                zcenters.append(zc)
+
+            plotarray = np.vstack((plotarray, plotarray))
+            xcenters = np.vstack((xcenters, xcenters))
+            zcenters = np.array(zcenters)
+
+            return plotarray, xcenters, zcenters, True
 
     @property
     def map_polygons(self):

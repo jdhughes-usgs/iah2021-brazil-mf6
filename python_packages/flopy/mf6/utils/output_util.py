@@ -1,7 +1,15 @@
 import os
-from ...utils import HeadFile, CellBudgetFile, Mf6Obs, ZoneBudget6, ZoneFile6
+from ...utils import (
+    HeadFile,
+    CellBudgetFile,
+    Mf6Obs,
+    ZoneBudget6,
+    ZoneFile6,
+    MfListBudget,
+)
 from ...utils.observationfile import CsvFile
 from ...pakbase import PackageInterface
+from ...mbase import ModelInterface
 
 
 class MF6Output:
@@ -16,7 +24,7 @@ class MF6Output:
     """
 
     def __init__(self, obj):
-        from ..modflow import ModflowUtlobs
+        from ..modflow import ModflowUtlobs, ModflowGwtoc, ModflowGwfoc
 
         # set initial observation definitions
         methods = {
@@ -31,8 +39,24 @@ class MF6Output:
         self._methods = []
         self._sim_ws = obj.simulation_data.mfpath.get_sim_path()
 
-        if not isinstance(obj, PackageInterface):
+        if not isinstance(obj, (PackageInterface, ModelInterface)):
             raise TypeError("Only mf6 PackageInterface types can be used")
+
+        # capture the list file for Models and for OC packages
+        if isinstance(obj, (ModelInterface, ModflowGwfoc, ModflowGwtoc)):
+            if isinstance(obj, ModelInterface):
+                ml = obj
+            else:
+                ml = obj.parent
+            self._mtype = ml.model_type
+            nam_file = ml.model_nam_file[:-4]
+            self._lst = ml.name_file.blocks["options"].datasets["list"].array
+            if self._lst is None:
+                self._lst = "{}.lst".format(nam_file)
+            setattr(self, "list", self.__list)
+            self._methods.append("list()")
+            if isinstance(obj, ModelInterface):
+                return
 
         obspkg = False
         if isinstance(obj, ModflowUtlobs):
@@ -76,6 +100,28 @@ class MF6Output:
                                         if str(ky[-2]).lower() == "fileout":
                                             data = [[ky[-1]]]
                                             break
+                                        elif (
+                                            str(ky[-3]) == "continuous"
+                                            and str(ky[-1]) == "output"
+                                        ):
+                                            if (
+                                                obj._simulation_data.mfdata[
+                                                    ky
+                                                ].array[0][0]
+                                                == "fileout"
+                                            ):
+                                                data = [
+                                                    [
+                                                        obj._simulation_data.mfdata[
+                                                            ky
+                                                        ].array[
+                                                            0
+                                                        ][
+                                                            -2
+                                                        ]
+                                                    ]
+                                                ]
+                                                break
 
                             if rectype == "package_convergence":
                                 rectype = "csv"
@@ -265,6 +311,21 @@ class MF6Output:
                 csv_file = os.path.join(self._sim_ws, csv_file)
                 return CsvFile(csv_file)
             except (IOError, FileNotFoundError):
+                return None
+
+    def __list(self):
+        """
+        Method to read list files
+
+        Returns
+        -------
+            MfListBudget, MtListBudget object
+        """
+        if self._lst is not None:
+            try:
+                list_file = os.path.join(self._sim_ws, self._lst)
+                return MfListBudget(list_file)
+            except (AssertionError, IOError, FileNotFoundError):
                 return None
 
     def __mulitfile_handler(self, f, flist):

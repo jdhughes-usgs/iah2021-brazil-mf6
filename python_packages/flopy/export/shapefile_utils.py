@@ -9,7 +9,6 @@ import json
 import numpy as np
 import os
 import warnings
-from collections import OrderedDict
 
 from ..datbase import DataType, DataInterface
 from ..utils import Util3d
@@ -916,25 +915,27 @@ class CRS:
         """
         from flopy.utils.flopy_io import get_url_text
 
-        epsg_categories = ["epsg", "esri"]
+        epsg_categories = (
+            "epsg",
+            "esri",
+        )
+        urls = []
         for cat in epsg_categories:
-            url = "{}/ref/".format(srefhttp) + "{}/{}/{}/".format(
-                cat, epsg, text
-            )
+            url = "{}/ref/{}/{}/{}/".format(srefhttp, cat, epsg, text)
+            urls.append(url)
             result = get_url_text(url)
             if result is not None:
                 break
         if result is not None:
             return result.replace("\n", "")
         elif result is None and text != "epsg":
-            for cat in epsg_categories:
-                error_msg = (
-                    "No internet connection or "
-                    + "epsg code {} ".format(epsg)
-                    + "not found at {}/ref/".format(srefhttp)
-                    + "{}/{}/{}".format(cat, epsg, text)
-                )
-                print(error_msg)
+            error_msg = (
+                "No internet connection or "
+                "epsg code {} not found at:\n".format(epsg)
+            )
+            for idx, url in enumerate(urls):
+                error_msg += "  {:>2d}: {}\n".format(idx + 1, url)
+            print(error_msg)
         # epsg code not listed on spatialreference.org
         # may still work with pyproj
         elif text == "epsg":
@@ -987,10 +988,10 @@ class EpsgReference:
         """
         returns dict with EPSG code integer key, and WKT CRS text
         """
-        data = OrderedDict()
+        data = {}
         if os.path.exists(self.location):
             with open(self.location, "r") as f:
-                loaded_data = json.load(f, object_pairs_hook=OrderedDict)
+                loaded_data = json.load(f)
             # convert JSON key from str to EPSG integer
             for key, value in loaded_data.items():
                 try:
